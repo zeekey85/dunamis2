@@ -1,0 +1,13 @@
+Exercise,Sets,Target Reps,Target Weight (lb),Superset Group,Coach's Notes,Set,Actual Reps,Actual Weight (lb),Notes,Reps in Reserve (RIR)
+"Cossack Squat",3,"10-12",0,None,"",1,8,0,"These feel awesome.",5
+"Cossack Squat",3,"10-12",0,None,"",2,8,0,"Need a checkbox when finished.",5
+"Cossack Squat",3,"10-12",0,None,"",3,8,0,"",5
+"Barbell Box Squat",3,"10",155,None,"",1,8,135,"The programmed reps don't show up!",2
+"Barbell Box Squat",3,"10",155,None,"",2,8,135,"Oof. Sloppy. Don't take 2 weeks off ever again dumbass! ",2
+"Barbell Box Squat",3,"10",155,None,"",3,8,135,"",1
+"Seated Good Morning",3,"6-8",95,A,"",1,10,45,"Need to check what happens if I refresh the page mid workout. Can I resume an incomplete workout? ",5
+"Seated Good Morning",3,"6-8",95,A,"",2,8,95,"",2
+"Seated Good Morning",3,"6-8",95,A,"",3,8,95,"",4
+"Rack Pull",3,"8-10",135,A,"",1,8,135,"More weight",5
+"Rack Pull",3,"8-10",135,A,"",2,8,135,"",2
+"Rack Pull",3,"8-10",135,A,"",3,12,135,"",4

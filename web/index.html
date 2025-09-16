@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dunamis - Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #555; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .new-item-animation { animation: fadeIn 0.3s ease-out; }
+        .drag-handle { cursor: move; }
+        .sortable-ghost { background: #c7d2fe; opacity: 0.6; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <header class="text-center mb-8">
+            <img src="/assets/logo.png" alt="Logo" class="w-20 h-20 mx-auto mb-4 rounded-full">
+            <h1 class="text-4xl font-bold text-gray-900">Workout Planner</h1>
+            <p id="current-user-display" class="text-gray-600 mt-2">Loading user...</p>
+            <div class="mt-4 flex justify-center items-center gap-4 flex-wrap">
+                <a href="index.html" class="text-blue-600 hover:underline">Planner</a>
+                <a href="Workout.html" class="text-blue-600 hover:underline">Tracker</a>
+                <a href="analysis.html" class="text-blue-600 hover:underline">Analysis</a>
+                <a href="Users.html" class="text-blue-600 hover:underline">Manage Athletes</a>
+                <a href="/logout" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md">Logout</a>
+            </div>
+        </header>
+        
+        <div id="statusContainer" class="text-center mb-6">
+             <p id="statusMessage" class="text-sm font-medium mt-1 h-5"></p>
+        </div>
+
+        <div class="mb-8 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+            <h2 class="text-2xl font-semibold mb-4 text-center">Mesocycle Overview</h2>
+            <div id="coach-user-selector-container" class="mb-4 text-center hidden">
+                <label for="coach-user-selector" class="block text-sm font-medium text-gray-700">View as Athlete:</label>
+                <select id="coach-user-selector" class="mt-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-1/3"></select>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div>
+                    <h3 class="font-semibold text-lg mb-3 text-gray-700 border-b pb-2">Recently Completed</h3>
+                    <div id="completed-workouts-list" class="space-y-2">
+                        <p class="text-gray-500 text-sm p-2">Loading data...</p>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg mb-3 text-gray-700 border-b pb-2">Upcoming Workouts</h3>
+                    <div id="planned-workouts-list" class="space-y-2">
+                        <p class="text-gray-500 text-sm p-2">Loading data...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <aside class="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h2 class="text-2xl font-semibold mb-4">Add Exercises</h2>
+                <input type="text" id="exerciseFilter" placeholder="Filter exercises..." class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <div id="exercise-list" class="space-y-2 max-h-96 overflow-y-auto custom-scrollbar pr-2"></div>
+            </aside>
+
+            <main class="w-full lg:w-2/3 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h2 class="text-2xl font-semibold mb-4">Build Your Plan</h2>
+                <div id="workout-plan" class="space-y-4">
+                    <div id="empty-state" class="text-center py-12 text-gray-500">
+                        <p>Your workout plan is empty. Add exercises from the left.</p>
+                        <p class="text-sm mt-2">(You can drag and drop to reorder them)</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <div class="mt-8 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+            <h2 class="text-2xl font-semibold mb-4 text-center">Save or Import</h2>
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4 flex-wrap">
+                <input type="text" id="workout-name-input" placeholder="Enter Workout Name (e.g., Push Day)" class="px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-auto">
+                <input type="date" id="workout-date-input" class="px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-auto">
+                <button id="save-plan-button" class="px-8 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-green-300 disabled:cursor-not-allowed w-full sm:w-auto">
+                    Save Plan
+                </button>
+            </div>
+             <div class="mt-6 border-t pt-6 flex flex-col sm:flex-row justify-center items-center gap-4">
+                <select id="import-selector" class="px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 w-full sm:w-auto">
+                    <option value="">-- Or Load Past Workout as Template --</option>
+                </select>
+                <button id="import-plan-button" class="px-8 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 w-full sm:w-auto">
+                    Import Selected
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // --- CONFIGURATION ---
+        const GET_CURRENT_USER_URL = '/api/get_current_user';
+        const GET_ATHLETES_URL = '/api/get_athletes';
+        const GET_EXERCISES_URL = '/api/get_exercises';
+        const GET_TEMPLATES_URL = '/api/list_templates';
+        const GET_MESOCYCLE_URL = '/api/mesocycle_view';
+        const SAVE_PLAN_URL = '/api/save_plan';
+        const GET_WORKOUT_URL = '/api/get_workout';
+        const DELETE_PLAN_URL = '/api/delete_plan';
+
+        // --- DOM ELEMENTS ---
+        const currentUserDisplay = document.getElementById('current-user-display');
+        const coachUserSelectorContainer = document.getElementById('coach-user-selector-container');
+        const coachUserSelector = document.getElementById('coach-user-selector');
+        const completedWorkoutsList = document.getElementById('completed-workouts-list');
+        const plannedWorkoutsList = document.getElementById('planned-workouts-list');
+        const exerciseList = document.getElementById('exercise-list');
+        const exerciseFilter = document.getElementById('exerciseFilter');
+        const workoutPlan = document.getElementById('workout-plan');
+        const emptyState = document.getElementById('empty-state');
+        const workoutNameInput = document.getElementById('workout-name-input');
+        const workoutDateInput = document.getElementById('workout-date-input');
+        const savePlanButton = document.getElementById('save-plan-button');
+        const importSelector = document.getElementById('import-selector');
+        const importPlanButton = document.getElementById('import-plan-button');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // --- STATE ---
+        let currentUser = null;
+        let userRole = null;
+        let allExercises = [];
+
+        // --- INITIALIZATION ---
+        async function initializeApp() {
+            try {
+                const response = await fetch(GET_CURRENT_USER_URL);
+                if (!response.ok) throw new Error(`Failed to fetch user data: ${response.statusText}`);
+                const data = await response.json();
+                
+                currentUser = data.username;
+                userRole = data.role;
+                currentUserDisplay.textContent = `Logged in as: ${currentUser} (${userRole})`;
+                
+                workoutDateInput.value = new Date().toISOString().split('T')[0];
+                
+                if (userRole === 'coach') {
+                    await setupCoachView();
+                } else {
+                    await loadMesocycleView(currentUser);
+                    await loadPastWorkoutsForTemplates(currentUser);
+                }
+                
+                await loadExercisesFromServer();
+                new Sortable(workoutPlan, { animation: 150, handle: '.drag-handle', ghostClass: 'sortable-ghost' });
+            } catch (error) {
+                console.error("Initialization failed:", error);
+                currentUserDisplay.textContent = "Error: Could not load user data.";
+                showStatus('Could not initialize application.', 'error');
+            }
+        }
+
+        // --- UI & STATUS FUNCTIONS ---
+        function showStatus(message, type = 'info', duration = 4000) {
+            statusMessage.textContent = message;
+            statusMessage.className = { info: 'text-blue-500', success: 'text-green-500', error: 'text-red-500' }[type] + ' text-sm font-medium h-5';
+            if (duration > 0) setTimeout(() => { statusMessage.textContent = ''; }, duration);
+        }
+
+        // --- COACH SPECIFIC FUNCTIONS ---
+        async function setupCoachView() {
+            coachUserSelectorContainer.classList.remove('hidden');
+            try {
+                const response = await fetch(GET_ATHLETES_URL);
+                if (!response.ok) throw new Error('Failed to fetch athlete list');
+                const data = await response.json();
+                if(data.status === 'success' && data.athletes.length > 0) {
+                    coachUserSelector.innerHTML = '<option value="">-- Select an Athlete --</option>';
+                    data.athletes.forEach(athlete => coachUserSelector.add(new Option(athlete, athlete)));
+                    coachUserSelector.addEventListener('change', () => {
+                        const selectedAthlete = coachUserSelector.value;
+                        if (selectedAthlete) {
+                            loadMesocycleView(selectedAthlete);
+                            loadPastWorkoutsForTemplates(selectedAthlete);
+                        } else {
+                            completedWorkoutsList.innerHTML = '<p class="text-gray-500 text-sm p-2">Select an athlete to view workouts.</p>';
+                            plannedWorkoutsList.innerHTML = '<p class="text-gray-500 text-sm p-2">Select an athlete to view workouts.</p>';
+                            importSelector.innerHTML = '<option value="">-- Select an Athlete First --</option>';
+                        }
+                    });
+                } else {
+                    coachUserSelector.innerHTML = '<option value="">-- No Athletes Found --</option>';
+                }
+            } catch (error) {
+                console.error('Error setting up coach view:', error);
+                coachUserSelector.innerHTML = '<option value="">-- Error Loading Athletes --</option>';
+            }
+        }
+
+        // --- DATA LOADING FUNCTIONS ---
+        async function loadMesocycleView(user) {
+            const url = `${GET_MESOCYCLE_URL}?user=${user}`;
+            completedWorkoutsList.innerHTML = '<p class="text-gray-500 text-sm p-2">Loading data...</p>';
+            plannedWorkoutsList.innerHTML = '<p class="text-gray-500 text-sm p-2">Loading data...</p>';
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to fetch mesocycle data');
+                const data = await response.json();
+                completedWorkoutsList.innerHTML = data.data.completed?.length > 0 ? data.data.completed.map(w => `<div class="text-gray-700 text-sm p-2 bg-gray-50 rounded-md">${w.replace('_tracked.csv', '').replace(/_/g, ' ')}</div>`).join('') : '<p class="text-gray-500 text-sm p-2">No completed workouts found.</p>';
+                plannedWorkoutsList.innerHTML = data.data.planned?.length > 0 ? data.data.planned.map(w => `<div class="flex justify-between items-center text-gray-700 text-sm p-2 bg-gray-50 rounded-md"><span>${w.replace('.csv', '').replace(/_/g, ' ')}</span><div><button data-plan="${w}" class="track-btn text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">Track</button><button data-plan="${w}" class="delete-btn text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">Delete</button></div></div>`).join('') : '<p class="text-gray-500 text-sm p-2">No upcoming workouts planned.</p>';
+            } catch (error) {
+                console.error(`Error loading mesocycle for ${user}:`, error);
+                completedWorkoutsList.innerHTML = '<p class="text-red-500 text-sm p-2">Error loading data.</p>';
+                plannedWorkoutsList.innerHTML = '<p class="text-red-500 text-sm p-2">Error loading data.</p>';
+            }
+        }
+
+        async function loadExercisesFromServer() {
+            try {
+                const response = await fetch(GET_EXERCISES_URL);
+                if (!response.ok) throw new Error('Failed to fetch exercises');
+                const data = await response.json();
+                if (data.status === 'success') {
+                    allExercises = data.exercises;
+                    renderExerciseList(allExercises);
+                } else { throw new Error(data.message || 'Unknown error'); }
+            } catch (error) {
+                console.error('Error loading exercises:', error);
+                exerciseList.innerHTML = `<p class="text-red-500">${error.message}</p>`;
+            }
+        }
+
+        function renderExerciseList(exercises) {
+            exerciseList.innerHTML = exercises.length === 0 ? '<p class="text-gray-500">No exercises found.</p>' : exercises.map(ex => `<div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100"><span class="font-medium text-gray-700">${ex}</span><button data-exercise="${ex}" class="add-exercise-btn bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold hover:bg-blue-600">+</button></div>`).join('');
+        }
+        
+        async function loadPastWorkoutsForTemplates(user) {
+            const url = `${GET_TEMPLATES_URL}?user=${user}`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to fetch templates');
+                const data = await response.json();
+                importSelector.innerHTML = '<option value="">-- Or Load Past Workout as Template --</option>';
+                if (data.status === 'success' && data.templates.length > 0) {
+                    data.templates.forEach(template => {
+                        const option = new Option(template.filename.replace(/_tracked\.csv|\.csv/g, '').replace(/_/g, ' '), `${template.type}:${template.filename}`);
+                        importSelector.add(option);
+                    });
+                } else {
+                    importSelector.innerHTML = '<option value="">-- No Past Workouts Found --</option>';
+                }
+            } catch (error) {
+                console.error('Error loading templates:', error);
+                importSelector.innerHTML = '<option value="">-- Error Loading Templates --</option>';
+            }
+        }
+
+        // --- WORKOUT PLAN MANIPULATION ---
+        function addExerciseToPlan(exerciseName) {
+            emptyState.style.display = 'none';
+            const exerciseDiv = document.createElement('div');
+            exerciseDiv.className = 'p-4 border rounded-lg bg-white new-item-animation exercise-block';
+            exerciseDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-bold text-lg text-gray-800 flex items-center gap-2"><span class="drag-handle text-gray-400 cursor-move">☰</span><span class="exercise-name">${exerciseName}</span></h4>
+                    <button class="remove-exercise-btn text-red-500 hover:text-red-700 font-bold">✕</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium">Sets:</label><input type="number" class="sets-input w-full p-2 border rounded-md" value="3"></div>
+                    <div><label class="block text-sm font-medium">Target Reps:</label><input type="text" class="reps-input w-full p-2 border rounded-md" value="8-12"></div>
+                    <div><label class="block text-sm font-medium">Target Weight (lb):</label><input type="number" class="weight-input w-full p-2 border rounded-md" value="100"></div>
+                    <div><label class="block text-sm font-medium">Superset Group:</label><input type="text" class="superset-input w-full p-2 border rounded-md" placeholder="e.g., A, B..."></div>
+                </div>
+                <div class="mt-2"><label class="block text-sm font-medium">Coach's Notes:</label><input type="text" class="notes-input w-full p-2 border rounded-md" placeholder="e.g., control the negative"></div>`;
+            workoutPlan.appendChild(exerciseDiv);
+        }
+
+        function getPlanAsDetailedCSV() {
+            const exerciseBlocks = Array.from(workoutPlan.querySelectorAll('.exercise-block'));
+            if (exerciseBlocks.length === 0) return null;
+
+            const exercisesData = exerciseBlocks.map(block => ({
+                name: block.querySelector('.exercise-name').textContent,
+                sets: parseInt(block.querySelector('.sets-input').value, 10) || 0,
+                reps: block.querySelector('.reps-input').value,
+                weight: block.querySelector('.weight-input').value,
+                superset: block.querySelector('.superset-input').value.toUpperCase().trim() || 'None',
+                notes: block.querySelector('.notes-input').value.replace(/,/g, ';')
+            }));
+
+            const headers = "Exercise,Set,Target Reps,Target Weight (lb),Superset Group,Coach's Notes,Actual Reps,Actual Weight (lb)\n";
+            
+            let workoutRows = [];
+            let processedIndices = new Set();
+
+            for (let i = 0; i < exercisesData.length; i++) {
+                if (processedIndices.has(i)) continue;
+
+                const currentEx = exercisesData[i];
+                const currentSupersetGroup = currentEx.superset;
+
+                if (currentSupersetGroup !== 'None') {
+                    // It's a superset. Find all contiguous exercises in the same group.
+                    const supersetBlock = [currentEx];
+                    processedIndices.add(i);
+
+                    for (let j = i + 1; j < exercisesData.length; j++) {
+                        if (exercisesData[j].superset === currentSupersetGroup) {
+                            supersetBlock.push(exercisesData[j]);
+                            processedIndices.add(j);
+                        } else {
+                            break; // End of contiguous superset block
+                        }
+                    }
+
+                    const maxSets = Math.max(...supersetBlock.map(ex => ex.sets));
+                    for (let setNum = 1; setNum <= maxSets; setNum++) {
+                        supersetBlock.forEach(exInGroup => {
+                            if (setNum <= exInGroup.sets) {
+                                workoutRows.push(`"${exInGroup.name}",${setNum},"${exInGroup.reps}","${exInGroup.weight}","${exInGroup.superset}","${exInGroup.notes}","",""`);
+                            }
+                        });
+                    }
+                } else {
+                    // It's an individual exercise
+                    for (let setNum = 1; setNum <= currentEx.sets; setNum++) {
+                        workoutRows.push(`"${currentEx.name}",${setNum},"${currentEx.reps}","${currentEx.weight}","${currentEx.superset}","${currentEx.notes}","",""`);
+                    }
+                    processedIndices.add(i);
+                }
+            }
+            
+            return headers + workoutRows.join('\n');
+        }
+        
+        async function savePlan() {
+            const csv = getPlanAsDetailedCSV();
+            if (!csv) return showStatus('Cannot save an empty plan.', 'error');
+
+            let userForFilename = userRole === 'coach' ? coachUserSelector.value : currentUser;
+            if (!userForFilename) return showStatus('Please select an athlete to save the plan for.', 'error');
+            
+            const workoutName = workoutNameInput.value.trim().replace(/ /g, '_');
+            const workoutDate = workoutDateInput.value;
+            if (!workoutName || !workoutDate) return showStatus('Please provide a workout name and date.', 'error');
+
+            const filename = `${userForFilename}_${workoutName}_${workoutDate}.csv`;
+            
+            try {
+                savePlanButton.disabled = true;
+                showStatus('Saving...', 'info');
+                const response = await fetch(SAVE_PLAN_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename, csv_content: csv })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || 'Failed to save');
+                
+                showStatus('Plan saved successfully!', 'success');
+                loadMesocycleView(userForFilename);
+            } catch(error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            } finally {
+                savePlanButton.disabled = false;
+            }
+        }
+        
+        async function importPlan() {
+            const selected = importSelector.value;
+            if (!selected) return showStatus('Please select a template to import.', 'error');
+
+            const [type, filename] = selected.split(':', 2);
+            
+            try {
+                importPlanButton.disabled = true;
+                showStatus('Importing...', 'info');
+                const response = await fetch(`${GET_WORKOUT_URL}?type=${type}&filename=${filename}`);
+                if (!response.ok) throw new Error('Could not fetch template file.');
+
+                const csvText = await response.text();
+                parseCSVAndBuildPlanForImport(csvText);
+                showStatus('Plan imported. You can now modify and save it.', 'success');
+            } catch(error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            } finally {
+                importPlanButton.disabled = false;
+            }
+        }
+
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            return lines.slice(1).map(line => {
+                const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                return headers.reduce((obj, header, i) => {
+                    obj[header] = values[i] || '';
+                    return obj;
+                }, {});
+            });
+        }
+
+        function parseCSVAndBuildPlanForImport(csvText) {
+            workoutPlan.innerHTML = ''; // Clear existing plan
+            const rows = parseCSV(csvText);
+
+            const exercisesData = rows.reduce((acc, row) => {
+                const exName = row.Exercise;
+                if (!acc[exName]) {
+                    acc[exName] = {
+                        name: exName, sets: 0, 
+                        reps: row['Target Reps'], 
+                        weight: row['Target Weight (lb)'] || row['Target Weight'], // Handles both old and new format
+                        superset: row['Superset Group'] || 'None',
+                        notes: row["Coach's Notes"] || row.Notes || ''
+                    };
+                }
+                acc[exName].sets++;
+                return acc;
+            }, {});
+
+            Object.values(exercisesData).forEach(addExerciseToPlanWithData);
+        }
+
+        function addExerciseToPlanWithData(exData) {
+            addExerciseToPlan(exData.name);
+            const newExerciseBlock = workoutPlan.lastChild;
+            newExerciseBlock.querySelector('.sets-input').value = exData.sets;
+            newExerciseBlock.querySelector('.reps-input').value = exData.reps;
+            newExerciseBlock.querySelector('.weight-input').value = exData.weight;
+            newExerciseBlock.querySelector('.superset-input').value = exData.superset === 'None' ? '' : exData.superset;
+            newExerciseBlock.querySelector('.notes-input').value = exData.notes;
+        }
+
+        async function deletePlan(filename) {
+             if (!confirm(`Are you sure you want to delete the plan: ${filename}? This cannot be undone.`)) return;
+             try {
+                showStatus('Deleting...', 'info');
+                const response = await fetch(DELETE_PLAN_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || 'Failed to delete');
+                
+                showStatus('Plan deleted successfully!', 'success');
+                const selectedAthlete = userRole === 'coach' ? coachUserSelector.value : currentUser;
+                if(selectedAthlete) loadMesocycleView(selectedAthlete);
+             } catch(error) {
+                showStatus(`Error: ${error.message}`, 'error');
+             }
+        }
+
+        // --- EVENT LISTENERS ---
+        exerciseFilter.addEventListener('input', (e) => renderExerciseList(allExercises.filter(ex => ex.toLowerCase().includes(e.target.value.toLowerCase()))));
+        exerciseList.addEventListener('click', (e) => e.target.closest('.add-exercise-btn') && addExerciseToPlan(e.target.closest('.add-exercise-btn').dataset.exercise));
+        workoutPlan.addEventListener('click', e => e.target.closest('.remove-exercise-btn') && e.target.closest('.exercise-block').remove());
+        plannedWorkoutsList.addEventListener('click', e => {
+            const trackBtn = e.target.closest('.track-btn');
+            const deleteBtn = e.target.closest('.delete-btn');
+            if(trackBtn) window.location.href = `Workout.html?plan=${trackBtn.dataset.plan}`;
+            if(deleteBtn) deletePlan(deleteBtn.dataset.plan);
+        });
+        savePlanButton.addEventListener('click', savePlan);
+        importPlanButton.addEventListener('click', importPlan);
+
+        // --- INITIALIZATION CALL ---
+        initializeApp();
+    </script>
+</body>
+</html>
+

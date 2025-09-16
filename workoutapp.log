@@ -1,0 +1,222 @@
+[2025-09-14 17:52:53 -0400] [8811] [INFO] Starting gunicorn 23.0.0
+[2025-09-14 17:52:53 -0400] [8811] [INFO] Listening at: http://0.0.0.0:5000 (8811)
+[2025-09-14 17:52:53 -0400] [8811] [INFO] Using worker: sync
+[2025-09-14 17:52:53 -0400] [8812] [INFO] Booting worker with pid: 8812
+[2025-09-14 17:52:53 -0400] [8813] [INFO] Booting worker with pid: 8813
+[2025-09-14 17:52:53 -0400] [8817] [INFO] Booting worker with pid: 8817
+[2025-09-14 17:52:53 -0400] [8818] [INFO] Booting worker with pid: 8818
+[2025-09-14 18:34:47 -0400] [8812] [INFO] Worker exiting (pid: 8812)
+[2025-09-14 18:34:47 -0400] [8811] [INFO] Handling signal: term
+[2025-09-14 18:34:47 -0400] [8817] [INFO] Worker exiting (pid: 8817)
+[2025-09-14 18:34:47 -0400] [8813] [INFO] Worker exiting (pid: 8813)
+[2025-09-14 18:34:47 -0400] [8818] [INFO] Worker exiting (pid: 8818)
+[2025-09-14 18:34:47 -0400] [8811] [ERROR] Worker (pid:8812) was sent SIGTERM!
+[2025-09-14 18:34:47 -0400] [8811] [ERROR] Worker (pid:8817) was sent SIGTERM!
+[2025-09-14 18:34:47 -0400] [8811] [ERROR] Worker (pid:8813) was sent SIGTERM!
+[2025-09-14 18:34:47 -0400] [8811] [ERROR] Worker (pid:8818) was sent SIGTERM!
+[2025-09-14 18:34:47 -0400] [8811] [INFO] Shutting down: Master
+[2025-09-14 18:35:40 -0400] [974] [INFO] Starting gunicorn 23.0.0
+[2025-09-14 18:35:40 -0400] [974] [INFO] Listening at: http://0.0.0.0:5000 (974)
+[2025-09-14 18:35:40 -0400] [974] [INFO] Using worker: sync
+[2025-09-14 18:35:40 -0400] [975] [INFO] Booting worker with pid: 975
+[2025-09-14 18:35:40 -0400] [976] [INFO] Booting worker with pid: 976
+[2025-09-14 18:35:40 -0400] [977] [INFO] Booting worker with pid: 977
+[2025-09-14 18:35:40 -0400] [978] [INFO] Booting worker with pid: 978
+/home/zak/dunamis_dev/server.py:238: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Reps'] = pd.to_numeric(exercise_df['Actual Reps'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:239: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Weight (lb)'] = pd.to_numeric(exercise_df['Actual Weight (lb)'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:238: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Reps'] = pd.to_numeric(exercise_df['Actual Reps'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:239: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Weight (lb)'] = pd.to_numeric(exercise_df['Actual Weight (lb)'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:238: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Reps'] = pd.to_numeric(exercise_df['Actual Reps'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:239: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Weight (lb)'] = pd.to_numeric(exercise_df['Actual Weight (lb)'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:238: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Reps'] = pd.to_numeric(exercise_df['Actual Reps'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:239: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Weight (lb)'] = pd.to_numeric(exercise_df['Actual Weight (lb)'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:238: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Reps'] = pd.to_numeric(exercise_df['Actual Reps'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:239: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Weight (lb)'] = pd.to_numeric(exercise_df['Actual Weight (lb)'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:238: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Reps'] = pd.to_numeric(exercise_df['Actual Reps'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:239: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Weight (lb)'] = pd.to_numeric(exercise_df['Actual Weight (lb)'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:238: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Reps'] = pd.to_numeric(exercise_df['Actual Reps'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:239: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Weight (lb)'] = pd.to_numeric(exercise_df['Actual Weight (lb)'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:238: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Reps'] = pd.to_numeric(exercise_df['Actual Reps'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:239: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Weight (lb)'] = pd.to_numeric(exercise_df['Actual Weight (lb)'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:238: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Reps'] = pd.to_numeric(exercise_df['Actual Reps'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:239: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Weight (lb)'] = pd.to_numeric(exercise_df['Actual Weight (lb)'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:238: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Reps'] = pd.to_numeric(exercise_df['Actual Reps'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:239: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Weight (lb)'] = pd.to_numeric(exercise_df['Actual Weight (lb)'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:238: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Reps'] = pd.to_numeric(exercise_df['Actual Reps'], errors='coerce').fillna(0)
+/home/zak/dunamis_dev/server.py:239: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exercise_df['Actual Weight (lb)'] = pd.to_numeric(exercise_df['Actual Weight (lb)'], errors='coerce').fillna(0)
+[2025-09-15 16:18:32 -0400] [974] [CRITICAL] WORKER TIMEOUT (pid:975)
+[2025-09-15 16:18:32 -0400] [974] [CRITICAL] WORKER TIMEOUT (pid:978)
+[2025-09-15 16:18:32 -0400] [978] [ERROR] Error handling request (no URI read)
+Traceback (most recent call last):
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 133, in handle
+    req = next(parser)
+          ^^^^^^^^^^^^
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/http/parser.py", line 41, in __next__
+    self.mesg = self.mesg_class(self.cfg, self.unreader, self.source_addr, self.req_count)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/http/message.py", line 259, in __init__
+    super().__init__(cfg, unreader, peer_addr)
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/http/message.py", line 60, in __init__
+    unused = self.parse(self.unreader)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/http/message.py", line 274, in parse
+    line, rbuf = self.read_line(unreader, buf, self.limit_request_line)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/http/message.py", line 326, in read_line
+    self.get_data(unreader, buf)
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/http/message.py", line 262, in get_data
+    data = unreader.read()
+           ^^^^^^^^^^^^^^^
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/http/unreader.py", line 36, in read
+    d = self.chunk()
+        ^^^^^^^^^^^^
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/http/unreader.py", line 63, in chunk
+    return self.sock.recv(self.mxchunk)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-09-15 16:18:32 -0400] [975] [ERROR] Error handling request (no URI read)
+Traceback (most recent call last):
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 133, in handle
+    req = next(parser)
+          ^^^^^^^^^^^^
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/http/parser.py", line 41, in __next__
+    self.mesg = self.mesg_class(self.cfg, self.unreader, self.source_addr, self.req_count)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/http/message.py", line 259, in __init__
+    super().__init__(cfg, unreader, peer_addr)
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/http/message.py", line 60, in __init__
+    unused = self.parse(self.unreader)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/http/message.py", line 274, in parse
+    line, rbuf = self.read_line(unreader, buf, self.limit_request_line)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/http/message.py", line 326, in read_line
+    self.get_data(unreader, buf)
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/http/message.py", line 262, in get_data
+    data = unreader.read()
+           ^^^^^^^^^^^^^^^
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/http/unreader.py", line 36, in read
+    d = self.chunk()
+        ^^^^^^^^^^^^
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/http/unreader.py", line 63, in chunk
+    return self.sock.recv(self.mxchunk)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zak/venv/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-09-15 16:18:32 -0400] [978] [INFO] Worker exiting (pid: 978)
+[2025-09-15 16:18:32 -0400] [975] [INFO] Worker exiting (pid: 975)
+[2025-09-15 16:18:32 -0400] [1026] [INFO] Booting worker with pid: 1026
+[2025-09-15 16:18:32 -0400] [1027] [INFO] Booting worker with pid: 1027

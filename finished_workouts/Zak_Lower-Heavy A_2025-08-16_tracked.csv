@@ -1,0 +1,17 @@
+Exercise,Sets,Target Reps,Target Weight (lb),Superset Group,Coach's Notes,Set,Actual Reps,Actual Weight (lb),Notes,Reps in Reserve (RIR)
+"Cossack Squat",3,"10-12",0,None,"",1,8,0,"",5
+"Cossack Squat",3,"10-12",0,None,"",2,10,0,"",5
+"Cossack Squat",3,"10-12",0,None,"",3,8,,"",5
+"Deadlifts",4,"3-5",185,None,"",1,5,185,"",4
+"Deadlifts",4,"3-5",185,None,"",2,5,225,"",1
+"Deadlifts",4,"3-5",185,None,"",3,5,225,"",2
+"Deadlifts",4,"3-5",185,None,"",4,3,245,"",1
+"Wide Stance Barbell Back Squot",3,"5-7",155,A,"",1,7,135,"",5
+"Wide Stance Barbell Back Squot",3,"5-7",155,A,"",2,7,135,"",2
+"Wide Stance Barbell Back Squot",3,"5-7",155,A,"",3,5,155,"",1
+"Glute-Ham Raise (GHR)",3,"8-10",10,A,"",1,8,10,"",4
+"Glute-Ham Raise (GHR)",3,"8-10",10,A,"",2,9,10,"",1
+"Glute-Ham Raise (GHR)",3,"8-10",10,A,"",3,8,10,"",0
+"Hanging Leg Raises",3,"10",0,A,"Three sets of 10",1,10,0,"",2
+"Hanging Leg Raises",3,"10",0,A,"Three sets of 10",2,10,0,"",1
+"Hanging Leg Raises",3,"10",0,A,"Three sets of 10",3,10,0,"",0

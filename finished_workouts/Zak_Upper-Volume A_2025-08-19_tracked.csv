@@ -1,0 +1,17 @@
+Exercise,Sets,Target Reps,Target Weight (lb),Superset Group,Coach's Notes,Set,Actual Reps,Actual Weight (lb),Notes,Reps in Reserve (RIR)
+"Close-Grip Pull Up",4,"5",0,None,"",1,5,0,"",2
+"Close-Grip Pull Up",4,"5",0,None,"",2,5,0,"",1
+"Close-Grip Pull Up",4,"5",0,None,"",3,4,0,"Fuck!",0
+"Close-Grip Pull Up",4,"5",0,None,"",4,4,0,"",0
+"Barbell Incline Bench Press",3,"8-10",95,None,"",1,8,95,"Should have a way to see last time’s data in here",2
+"Barbell Incline Bench Press",3,"8-10",95,None,"",2,9,95,"",1
+"Barbell Incline Bench Press",3,"8-10",95,None,"",3,7,95,"Need to do tricep work",0
+"Lat Pulldowns",3,"8-10",140,A,"",1,8,140,"Oof. These felt like garbage. ",1
+"Lat Pulldowns",3,"8-10",140,A,"",2,9,130,"",1
+"Lat Pulldowns",3,"8-10",140,A,"",3,7,130,"",0
+"dumbbell bench press",3,"8-10",50,A,"",1,8,50,"Ugh. Something up. Sleep like garbage lately. ",1
+"dumbbell bench press",3,"8-10",50,A,"",2,8,50,"",0
+"dumbbell bench press",3,"8-10",50,A,"",3,8,50,"",0
+"Hanging Leg Raises",3,"fail",0,A,"",1,14,,"",1
+"Hanging Leg Raises",3,"fail",0,A,"",2,12,0,"Swinging around like an idiot",1
+"Hanging Leg Raises",3,"fail",0,A,"",3,,,"",
