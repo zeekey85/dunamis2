@@ -1,5 +1,3 @@
-# dunamis2
-
 Dunamis Workout Planner & Tracker
 Dunamis is a lightweight, file-based web application for coaches to plan, assign, and track workouts for their athletes. Built with a Python Flask backend and a vanilla JavaScript frontend, it is designed to be simple, extensible, and easy to deploy on low-power hardware like a Raspberry Pi.
 
@@ -158,6 +156,7 @@ sudo systemctl status dunamis
 While Gunicorn is running the application, it's best practice to use a web server like Nginx to handle incoming traffic and forward it to Gunicorn. This improves security and performance.
 
 You would typically configure Nginx to listen on port 80 and proxy requests to the dunamis.sock file created by Gunicorn. This step is optional but highly recommended for a production environment.
+
 
 
 
