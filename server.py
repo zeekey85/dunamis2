@@ -25,7 +25,6 @@ INPROGRESS_DIR = os.path.join(BASE_DIR, 'inprogress_workouts')
 FINISHED_DIR = os.path.join(BASE_DIR, 'finished_workouts')
 API_DIR = os.path.join(BASE_DIR, 'api')
 
-# Simplified directory creation without archived_plans
 for directory in [WEB_DIR, PLANNED_DIR, INPROGRESS_DIR, FINISHED_DIR, API_DIR, ASSETS_DIR]:
     os.makedirs(directory, exist_ok=True)
 
@@ -287,18 +286,14 @@ def complete_workout():
     plan_filename, tracked_filename, csv_content = data.get('plan_filename'), data.get('tracked_filename'), data.get('csv_content')
     if current_user.role != 'coach' and not tracked_filename.startswith(current_user.username + '_'):
         return jsonify({"status": "error", "message": "Permission denied."}), 403
-    
     with open(os.path.join(FINISHED_DIR, tracked_filename), 'w', newline='', encoding='utf-8') as f:
         f.write(csv_content)
-    
     plan_path = os.path.join(PLANNED_DIR, plan_filename)
     if os.path.exists(plan_path):
         os.remove(plan_path)
-
     inprogress_path = os.path.join(INPROGRESS_DIR, tracked_filename)
     if os.path.exists(inprogress_path):
         os.remove(inprogress_path)
-        
     return jsonify({"status": "success", "message": "Workout completed."})
 
 @app.route('/api/get_exercises', methods=['GET'])
@@ -311,6 +306,29 @@ def get_exercises():
     except Exception as e:
         app.logger.error(f"Could not read exercises file: {e}")
         return jsonify({"status": "error", "message": "Could not read exercises."}), 500
+
+@app.route('/api/add_exercise', methods=['POST'])
+@coach_required
+def add_exercise():
+    data = request.get_json()
+    new_exercise = data.get('exercise', '').strip()
+    if not new_exercise:
+        return jsonify({"status": "error", "message": "Exercise name cannot be empty."}), 400
+    
+    exercises_path = os.path.join(API_DIR, 'exercises.csv')
+    try:
+        df = pd.read_csv(exercises_path) if os.path.exists(exercises_path) else pd.DataFrame(columns=['Exercise'])
+        if new_exercise.lower() in df['Exercise'].str.lower().values:
+            return jsonify({"status": "error", "message": f"Exercise '{new_exercise}' already exists."}), 409
+        
+        new_df = pd.concat([df, pd.DataFrame([{'Exercise': new_exercise}])], ignore_index=True)
+        new_df.sort_values('Exercise', inplace=True)
+        new_df.to_csv(exercises_path, index=False)
+        return jsonify({"status": "success", "message": f"Exercise '{new_exercise}' added."}), 201
+    except Exception as e:
+        app.logger.error(f"Error adding exercise: {e}")
+        return jsonify({"status": "error", "message": "Could not add exercise."}), 500
+
 
 @app.route('/api/get_workout', methods=['GET'])
 @login_required
@@ -331,12 +349,9 @@ def list_templates():
     username_to_view = request.args.get('user', current_user.username)
     if current_user.role != 'coach' and username_to_view != current_user.username:
         return jsonify({"status": "error", "message": "Permission denied."}), 403
-    
     finished_files = filter_files_by_user([f for f in os.listdir(FINISHED_DIR) if f.endswith('_tracked.csv')], username_to_view)
-    
     templates = [{'filename': f, 'type': 'finished'} for f in finished_files]
     templates.sort(key=lambda x: x['filename'], reverse=True)
-    
     return jsonify({"status": "success", "templates": templates})
 
 @app.route('/api/delete_plan', methods=['POST'])
@@ -345,7 +360,6 @@ def delete_plan():
     filename = request.json.get('filename')
     if current_user.role != 'coach' and not filename.startswith(current_user.username + '_'):
         return jsonify({"status": "error", "message": "Permission denied."}), 403
-        
     file_path = os.path.join(PLANNED_DIR, filename)
     if os.path.exists(file_path):
         os.remove(file_path)
