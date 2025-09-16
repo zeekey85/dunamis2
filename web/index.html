@@ -17,6 +17,7 @@
         .new-item-animation { animation: fadeIn 0.3s ease-out; }
         .drag-handle { cursor: move; }
         .sortable-ghost { background: #c7d2fe; opacity: 0.6; }
+        .ramp-inputs { display: none; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -66,6 +67,13 @@
                 <h2 class="text-2xl font-semibold mb-4">Add Exercises</h2>
                 <input type="text" id="exerciseFilter" placeholder="Filter exercises..." class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 <div id="exercise-list" class="space-y-2 max-h-96 overflow-y-auto custom-scrollbar pr-2"></div>
+                <div class="mt-4 pt-4 border-t">
+                    <h3 class="font-semibold mb-2 text-gray-800">Add New Exercise</h3>
+                    <div class="flex gap-2">
+                        <input type="text" id="new-exercise-name" placeholder="New Exercise Name" class="flex-grow p-2 border rounded-md">
+                        <button id="add-new-exercise-btn" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">Add</button>
+                    </div>
+                </div>
             </aside>
 
             <main class="w-full lg:w-2/3 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
@@ -104,6 +112,7 @@
         const GET_CURRENT_USER_URL = '/api/get_current_user';
         const GET_ATHLETES_URL = '/api/get_athletes';
         const GET_EXERCISES_URL = '/api/get_exercises';
+        const ADD_EXERCISE_URL = '/api/add_exercise';
         const GET_TEMPLATES_URL = '/api/list_templates';
         const GET_MESOCYCLE_URL = '/api/mesocycle_view';
         const SAVE_PLAN_URL = '/api/save_plan';
@@ -118,6 +127,8 @@
         const plannedWorkoutsList = document.getElementById('planned-workouts-list');
         const exerciseList = document.getElementById('exercise-list');
         const exerciseFilter = document.getElementById('exerciseFilter');
+        const newExerciseNameInput = document.getElementById('new-exercise-name');
+        const addNewExerciseBtn = document.getElementById('add-new-exercise-btn');
         const workoutPlan = document.getElementById('workout-plan');
         const emptyState = document.getElementById('empty-state');
         const workoutNameInput = document.getElementById('workout-name-input');
@@ -266,11 +277,19 @@
                     <h4 class="font-bold text-lg text-gray-800 flex items-center gap-2"><span class="drag-handle text-gray-400 cursor-move">☰</span><span class="exercise-name">${exerciseName}</span></h4>
                     <button class="remove-exercise-btn text-red-500 hover:text-red-700 font-bold">✕</button>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-4">
                     <div><label class="block text-sm font-medium">Sets:</label><input type="number" class="sets-input w-full p-2 border rounded-md" value="3"></div>
                     <div><label class="block text-sm font-medium">Target Reps:</label><input type="text" class="reps-input w-full p-2 border rounded-md" value="8-12"></div>
-                    <div><label class="block text-sm font-medium">Target Weight (lb):</label><input type="number" class="weight-input w-full p-2 border rounded-md" value="100"></div>
                     <div><label class="block text-sm font-medium">Superset Group:</label><input type="text" class="superset-input w-full p-2 border rounded-md" placeholder="e.g., A, B..."></div>
+                    <div class="flex items-end"><label class="flex items-center gap-2"><input type="checkbox" class="ramp-checkbox h-4 w-4"> Is this a ramp?</label></div>
+                </div>
+                <div class="mt-4 single-weight-inputs">
+                    <label class="block text-sm font-medium">Target Weight (lb):</label>
+                    <input type="number" class="weight-input w-full p-2 border rounded-md" value="100">
+                </div>
+                <div class="mt-4 ramp-inputs grid grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium">Initial Weight (lb):</label><input type="number" class="initial-weight-input w-full p-2 border rounded-md" value="80"></div>
+                    <div><label class="block text-sm font-medium">Final Weight (lb):</label><input type="number" class="final-weight-input w-full p-2 border rounded-md" value="120"></div>
                 </div>
                 <div class="mt-2"><label class="block text-sm font-medium">Coach's Notes:</label><input type="text" class="notes-input w-full p-2 border rounded-md" placeholder="e.g., control the negative"></div>`;
             workoutPlan.appendChild(exerciseDiv);
@@ -280,17 +299,22 @@
             const exerciseBlocks = Array.from(workoutPlan.querySelectorAll('.exercise-block'));
             if (exerciseBlocks.length === 0) return null;
 
-            const exercisesData = exerciseBlocks.map(block => ({
-                name: block.querySelector('.exercise-name').textContent,
-                sets: parseInt(block.querySelector('.sets-input').value, 10) || 0,
-                reps: block.querySelector('.reps-input').value,
-                weight: block.querySelector('.weight-input').value,
-                superset: block.querySelector('.superset-input').value.toUpperCase().trim() || 'None',
-                notes: block.querySelector('.notes-input').value.replace(/,/g, ';')
-            }));
+            const exercisesData = exerciseBlocks.map(block => {
+                const isRamp = block.querySelector('.ramp-checkbox').checked;
+                return {
+                    name: block.querySelector('.exercise-name').textContent,
+                    sets: parseInt(block.querySelector('.sets-input').value, 10) || 0,
+                    reps: block.querySelector('.reps-input').value,
+                    isRamp: isRamp,
+                    weight: isRamp ? 0 : block.querySelector('.weight-input').value,
+                    initialWeight: isRamp ? parseFloat(block.querySelector('.initial-weight-input').value) || 0 : 0,
+                    finalWeight: isRamp ? parseFloat(block.querySelector('.final-weight-input').value) || 0 : 0,
+                    superset: block.querySelector('.superset-input').value.toUpperCase().trim() || 'None',
+                    notes: block.querySelector('.notes-input').value.replace(/,/g, ';')
+                }
+            });
 
-            const headers = "Exercise,Set,Target Reps,Target Weight (lb),Superset Group,Coach's Notes,Actual Reps,Actual Weight (lb)\n";
-            
+            const headers = "Exercise,Set,Target Reps,Target Weight (lb),Superset Group,Coach's Notes,Actual Reps,Actual Weight (lb),RIR,Athlete Notes\n";
             let workoutRows = [];
             let processedIndices = new Set();
 
@@ -301,37 +325,41 @@
                 const currentSupersetGroup = currentEx.superset;
 
                 if (currentSupersetGroup !== 'None') {
-                    // It's a superset. Find all contiguous exercises in the same group.
                     const supersetBlock = [currentEx];
                     processedIndices.add(i);
-
                     for (let j = i + 1; j < exercisesData.length; j++) {
                         if (exercisesData[j].superset === currentSupersetGroup) {
                             supersetBlock.push(exercisesData[j]);
                             processedIndices.add(j);
-                        } else {
-                            break; // End of contiguous superset block
-                        }
+                        } else { break; }
                     }
 
                     const maxSets = Math.max(...supersetBlock.map(ex => ex.sets));
                     for (let setNum = 1; setNum <= maxSets; setNum++) {
                         supersetBlock.forEach(exInGroup => {
                             if (setNum <= exInGroup.sets) {
-                                workoutRows.push(`"${exInGroup.name}",${setNum},"${exInGroup.reps}","${exInGroup.weight}","${exInGroup.superset}","${exInGroup.notes}","",""`);
+                                const weight = calculateWeightForSet(exInGroup, setNum);
+                                workoutRows.push(`"${exInGroup.name}",${setNum},"${exInGroup.reps}","${weight}","${exInGroup.superset}","${exInGroup.notes}","","","",""`);
                             }
                         });
                     }
                 } else {
-                    // It's an individual exercise
                     for (let setNum = 1; setNum <= currentEx.sets; setNum++) {
-                        workoutRows.push(`"${currentEx.name}",${setNum},"${currentEx.reps}","${currentEx.weight}","${currentEx.superset}","${currentEx.notes}","",""`);
+                        const weight = calculateWeightForSet(currentEx, setNum);
+                        workoutRows.push(`"${currentEx.name}",${setNum},"${currentEx.reps}","${weight}","${currentEx.superset}","${currentEx.notes}","","","",""`);
                     }
                     processedIndices.add(i);
                 }
             }
             
             return headers + workoutRows.join('\n');
+        }
+
+        function calculateWeightForSet(exercise, setNum) {
+            if (!exercise.isRamp) return exercise.weight;
+            if (exercise.sets <= 1) return exercise.initialWeight;
+            const increment = (exercise.finalWeight - exercise.initialWeight) / (exercise.sets - 1);
+            return Math.round((exercise.initialWeight + (increment * (setNum - 1))) * 100) / 100;
         }
         
         async function savePlan() {
@@ -368,17 +396,15 @@
         }
         
         async function importPlan() {
+            // This function remains the same as it correctly imports the data structure
             const selected = importSelector.value;
             if (!selected) return showStatus('Please select a template to import.', 'error');
-
             const [type, filename] = selected.split(':', 2);
-            
             try {
                 importPlanButton.disabled = true;
                 showStatus('Importing...', 'info');
                 const response = await fetch(`${GET_WORKOUT_URL}?type=${type}&filename=${filename}`);
                 if (!response.ok) throw new Error('Could not fetch template file.');
-
                 const csvText = await response.text();
                 parseCSVAndBuildPlanForImport(csvText);
                 showStatus('Plan imported. You can now modify and save it.', 'success');
@@ -402,16 +428,15 @@
         }
 
         function parseCSVAndBuildPlanForImport(csvText) {
-            workoutPlan.innerHTML = ''; // Clear existing plan
+            workoutPlan.innerHTML = '';
             const rows = parseCSV(csvText);
-
             const exercisesData = rows.reduce((acc, row) => {
                 const exName = row.Exercise;
                 if (!acc[exName]) {
                     acc[exName] = {
                         name: exName, sets: 0, 
                         reps: row['Target Reps'], 
-                        weight: row['Target Weight (lb)'] || row['Target Weight'], // Handles both old and new format
+                        weight: row['Target Weight (lb)'] || row['Target Weight'],
                         superset: row['Superset Group'] || 'None',
                         notes: row["Coach's Notes"] || row.Notes || ''
                     };
@@ -419,7 +444,6 @@
                 acc[exName].sets++;
                 return acc;
             }, {});
-
             Object.values(exercisesData).forEach(addExerciseToPlanWithData);
         }
 
@@ -444,7 +468,6 @@
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.message || 'Failed to delete');
-                
                 showStatus('Plan deleted successfully!', 'success');
                 const selectedAthlete = userRole === 'coach' ? coachUserSelector.value : currentUser;
                 if(selectedAthlete) loadMesocycleView(selectedAthlete);
@@ -452,11 +475,47 @@
                 showStatus(`Error: ${error.message}`, 'error');
              }
         }
+        
+        async function addNewExercise() {
+            const exerciseName = newExerciseNameInput.value.trim();
+            if (!exerciseName) {
+                showStatus('Please enter an exercise name.', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(ADD_EXERCISE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ exercise: exerciseName })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+                showStatus(data.message, 'success');
+                newExerciseNameInput.value = '';
+                await loadExercisesFromServer(); // Refresh the list
+            } catch(e) {
+                showStatus(e.message, 'error');
+            }
+        }
 
         // --- EVENT LISTENERS ---
         exerciseFilter.addEventListener('input', (e) => renderExerciseList(allExercises.filter(ex => ex.toLowerCase().includes(e.target.value.toLowerCase()))));
         exerciseList.addEventListener('click', (e) => e.target.closest('.add-exercise-btn') && addExerciseToPlan(e.target.closest('.add-exercise-btn').dataset.exercise));
-        workoutPlan.addEventListener('click', e => e.target.closest('.remove-exercise-btn') && e.target.closest('.exercise-block').remove());
+        workoutPlan.addEventListener('click', e => {
+            if (e.target.closest('.remove-exercise-btn')) e.target.closest('.exercise-block').remove();
+            if (e.target.classList.contains('ramp-checkbox')) {
+                const block = e.target.closest('.exercise-block');
+                const singleWeight = block.querySelector('.single-weight-inputs');
+                const rampWeights = block.querySelector('.ramp-inputs');
+                if (e.target.checked) {
+                    singleWeight.style.display = 'none';
+                    rampWeights.style.display = 'grid';
+                } else {
+                    singleWeight.style.display = 'block';
+                    rampWeights.style.display = 'none';
+                }
+            }
+        });
         plannedWorkoutsList.addEventListener('click', e => {
             const trackBtn = e.target.closest('.track-btn');
             const deleteBtn = e.target.closest('.delete-btn');
@@ -465,6 +524,7 @@
         });
         savePlanButton.addEventListener('click', savePlan);
         importPlanButton.addEventListener('click', importPlan);
+        addNewExerciseBtn.addEventListener('click', addNewExercise);
 
         // --- INITIALIZATION CALL ---
         initializeApp();
