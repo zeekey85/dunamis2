@@ -10,6 +10,8 @@ import shutil
 import logging
 from functools import wraps
 import pandas as pd
+import subprocess
+import csv
 
 app = Flask(__name__, template_folder='web')
 app.secret_key = b'a_much_more_secure_secret_key_please_change'
@@ -24,6 +26,7 @@ PLANNED_DIR = os.path.join(BASE_DIR, 'planned_workouts')
 INPROGRESS_DIR = os.path.join(BASE_DIR, 'inprogress_workouts')
 FINISHED_DIR = os.path.join(BASE_DIR, 'finished_workouts')
 API_DIR = os.path.join(BASE_DIR, 'api')
+EMAILS_PATH = os.path.join(API_DIR, 'emails.csv')
 
 for directory in [WEB_DIR, PLANNED_DIR, INPROGRESS_DIR, FINISHED_DIR, API_DIR, ASSETS_DIR]:
     os.makedirs(directory, exist_ok=True)
@@ -88,6 +91,34 @@ def coach_required(f):
             return jsonify(status='error', message='Coach access required'), 403
         return f(*args, **kwargs)
     return decorated_function
+
+# --- EMAIL FUNCTIONS ---
+def get_athlete_email(athlete_name):
+    """Looks up an athlete's email from the emails.csv file."""
+    try:
+        with open(EMAILS_PATH, mode='r') as infile:
+            reader = csv.reader(infile)
+            next(reader, None) # Skip header
+            for row in reader:
+                if row[0].lower() == athlete_name.lower():
+                    return row[1]
+    except FileNotFoundError:
+        app.logger.error(f"Email file not found at {EMAILS_PATH}")
+    except Exception as e:
+        app.logger.error(f"Error reading email file: {e}")
+    return None
+
+def send_email_notification(recipient_email, subject, body, attachment_path):
+    """Sends an email using the command-line mail utility."""
+    try:
+        # The command uses mailutils: mail -s "Subject" -A /path/to/file recipient@example.com <<< "Body"
+        command = f'echo "{body}" | mail -s "{subject}" -A "{attachment_path}" {recipient_email}'
+        subprocess.run(command, shell=True, check=True)
+        app.logger.info(f"Successfully sent workout email to {recipient_email}")
+    except subprocess.CalledProcessError as e:
+        app.logger.error(f"Failed to send email to {recipient_email}. Error: {e}")
+    except Exception as e:
+        app.logger.error(f"An unexpected error occurred during email sending: {e}")
 
 # --- USER MANAGEMENT & CORE ROUTES ---
 @app.route('/login', methods=['GET', 'POST'])
@@ -283,17 +314,35 @@ def save_progress():
 @login_required
 def complete_workout():
     data = request.get_json()
-    plan_filename, tracked_filename, csv_content = data.get('plan_filename'), data.get('tracked_filename'), data.get('csv_content')
+    plan_filename = data.get('plan_filename')
+    tracked_filename = data.get('tracked_filename')
+    csv_content = data.get('csv_content')
+
     if current_user.role != 'coach' and not tracked_filename.startswith(current_user.username + '_'):
         return jsonify({"status": "error", "message": "Permission denied."}), 403
-    with open(os.path.join(FINISHED_DIR, tracked_filename), 'w', newline='', encoding='utf-8') as f:
+    
+    finished_path = os.path.join(FINISHED_DIR, tracked_filename)
+    with open(finished_path, 'w', newline='', encoding='utf-8') as f:
         f.write(csv_content)
+    
     plan_path = os.path.join(PLANNED_DIR, plan_filename)
     if os.path.exists(plan_path):
         os.remove(plan_path)
+
     inprogress_path = os.path.join(INPROGRESS_DIR, tracked_filename)
     if os.path.exists(inprogress_path):
         os.remove(inprogress_path)
+    
+    # --- EMAIL LOGIC ---
+    athlete_name = tracked_filename.split('_')[0]
+    recipient = get_athlete_email(athlete_name)
+    if recipient:
+        subject = f"Workout Completed: {plan_filename.replace('.csv', '').replace('_', ' ')}"
+        body = f"Great work, {athlete_name}!\n\nYour workout has been completed. The full details are attached.\n\n- Dunamis Training"
+        send_email_notification(recipient, subject, body, finished_path)
+    else:
+        app.logger.warning(f"Could not find email for athlete '{athlete_name}'. Skipping email notification.")
+
     return jsonify({"status": "success", "message": "Workout completed."})
 
 @app.route('/api/get_exercises', methods=['GET'])
@@ -329,7 +378,6 @@ def add_exercise():
         app.logger.error(f"Error adding exercise: {e}")
         return jsonify({"status": "error", "message": "Could not add exercise."}), 500
 
-
 @app.route('/api/get_workout', methods=['GET'])
 @login_required
 def get_workout_file():
@@ -349,9 +397,12 @@ def list_templates():
     username_to_view = request.args.get('user', current_user.username)
     if current_user.role != 'coach' and username_to_view != current_user.username:
         return jsonify({"status": "error", "message": "Permission denied."}), 403
+    
     finished_files = filter_files_by_user([f for f in os.listdir(FINISHED_DIR) if f.endswith('_tracked.csv')], username_to_view)
+    
     templates = [{'filename': f, 'type': 'finished'} for f in finished_files]
     templates.sort(key=lambda x: x['filename'], reverse=True)
+    
     return jsonify({"status": "success", "templates": templates})
 
 @app.route('/api/delete_plan', methods=['POST'])
@@ -360,6 +411,7 @@ def delete_plan():
     filename = request.json.get('filename')
     if current_user.role != 'coach' and not filename.startswith(current_user.username + '_'):
         return jsonify({"status": "error", "message": "Permission denied."}), 403
+        
     file_path = os.path.join(PLANNED_DIR, filename)
     if os.path.exists(file_path):
         os.remove(file_path)
