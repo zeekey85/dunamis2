@@ -32,18 +32,12 @@ EMAILS_PATH = os.path.join(API_DIR, 'emails.csv')
 # --- LOGGING SETUP ---
 log_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
 log_file = os.path.join(BASE_DIR, 'dunamis_app.log')
-
-# Use TimedRotatingFileHandler to rotate logs daily and keep 7 days of backups
 handler = TimedRotatingFileHandler(log_file, when='midnight', interval=1, backupCount=7)
 handler.setFormatter(log_formatter)
 handler.setLevel(logging.INFO)
-
-# Add the handler to the Flask app's logger
 app.logger.addHandler(handler)
 app.logger.setLevel(logging.INFO)
-
 app.logger.info('Dunamis App starting up...')
-
 
 for directory in [WEB_DIR, PLANNED_DIR, INPROGRESS_DIR, FINISHED_DIR, API_DIR, ASSETS_DIR]:
     os.makedirs(directory, exist_ok=True)
@@ -61,25 +55,25 @@ class User(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_id):
-    if int(user_id) == 1:
+    """Loads user from session. Simplified for hardcoded 'coach' user."""
+    # Since login is hardcoded for the coach (ID 1), this is the only case we need to handle.
+    if user_id is not None and int(user_id) == 1:
+        app.logger.info(f"load_user: Successfully loaded coach user (ID: {user_id}) from session.")
         return User(id=1, username='coach', role='coach')
-    try:
-        with sqlite3.connect(DB_PATH) as conn:
-            conn.row_factory = sqlite3.Row
-            user_data = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
-        if user_data:
-            return User(id=user_data['id'], username=user_data['username'], role=user_data['role'])
-    except sqlite3.Error as e:
-        app.logger.error(f"Database error in load_user: {e}")
+    
+    # If the user_id is anything else, they are not a valid user in this hardcoded setup.
+    app.logger.warning(f"load_user: Attempted to load an invalid user_id from session: {user_id}")
     return None
 
 @login_manager.unauthorized_handler
 def unauthorized_callback():
+    app.logger.warning(f"Unauthorized access attempt to path: {request.path}")
     if request.path.startswith('/api/'):
         return jsonify(status='error', message='Authentication required'), 401
     return redirect(url_for('login'))
 
 def init_db():
+    # This function is kept for potential future use but is not critical for the current hardcoded login.
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute('''
@@ -111,7 +105,6 @@ def coach_required(f):
 
 # --- EMAIL FUNCTIONS ---
 def get_athlete_email(athlete_name):
-    """Looks up an athlete's email from the emails.csv file."""
     try:
         with open(EMAILS_PATH, mode='r') as infile:
             reader = csv.reader(infile)
@@ -126,7 +119,6 @@ def get_athlete_email(athlete_name):
     return None
 
 def send_email_notification(recipient_email, subject, body, attachment_path):
-    """Sends an email using the command-line mail utility."""
     try:
         command = f'echo "{body}" | mail -s "{subject}" -A "{attachment_path}" {recipient_email}'
         subprocess.run(command, shell=True, check=True)
@@ -145,7 +137,7 @@ def login():
         if username == 'coach' and password == 'get$trong@dunamis':
             user = User(id=1, username='coach', role='coach')
             login_user(user, remember=True)
-            app.logger.info("Coach user logged in successfully.")
+            app.logger.info("Coach user logged in successfully. Session created.")
             return redirect(url_for('root'))
         else:
             app.logger.warning(f"Failed login attempt for username: {username}")
@@ -182,10 +174,43 @@ def send_html(path):
     return send_from_directory(WEB_DIR, path)
 
 # --- API ENDPOINTS ---
+
+@app.route('/api/test_email', methods=['GET'])
+@coach_required
+def test_email():
+    recipient = request.args.get('recipient')
+    if not recipient:
+        return jsonify({"status": "error", "message": "Recipient email address is required as a query parameter (e.g., ?recipient=test@example.com)."}), 400
+    app.logger.info(f"Initiating test email to {recipient}")
+    subject = "Dunamis App: Test Email"
+    body = "This is a test email sent from the Dunamis workout application to verify the email configuration."
+    test_attachment_path = os.path.join(BASE_DIR, 'test_attachment.txt')
+    with open(test_attachment_path, 'w') as f:
+        f.write('This is a test attachment file.')
+    try:
+        command = f'echo "{body}" | mail -v -s "{subject}" -A "{test_attachment_path}" {recipient}'
+        result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+        os.remove(test_attachment_path)
+        app.logger.info(f"Test email command executed successfully. STDOUT: {result.stdout}")
+        return jsonify({"status": "success", "message": "Test email command executed. Check the recipient's inbox and the server logs.", "stdout": result.stdout, "stderr": result.stderr})
+    except subprocess.CalledProcessError as e:
+        if os.path.exists(test_attachment_path): os.remove(test_attachment_path)
+        app.logger.error(f"Failed to send test email to {recipient}. Stderr: {e.stderr}")
+        return jsonify({"status": "error", "message": "Failed to execute the mail command. Check logs for details.", "stdout": e.stdout, "stderr": e.stderr}), 500
+    except Exception as e:
+        if os.path.exists(test_attachment_path): os.remove(test_attachment_path)
+        app.logger.error(f"An unexpected error occurred during test email sending: {e}")
+        return jsonify({"status": "error", "message": f"An unexpected error occurred: {str(e)}"}), 500
+
 @app.route('/api/get_current_user', methods=['GET'])
 @login_required
 def get_current_user():
     return jsonify({"status": "success", "username": current_user.username, "role": current_user.role})
+
+# ... The rest of the API endpoints remain unchanged ...
+def filter_files_by_user(files, username=None):
+    user_to_check = username or current_user.username
+    return [f for f in files if f.lower().startswith(user_to_check.lower() + '_')]
 
 @app.route('/api/get_athletes', methods=['GET'])
 @coach_required
@@ -202,10 +227,6 @@ def get_athletes():
     except Exception as e:
         app.logger.error(f"Could not get athletes: {e}")
         return jsonify({"status": "error", "message": "Could not retrieve athlete list."}), 500
-
-def filter_files_by_user(files, username=None):
-    user_to_check = username or current_user.username
-    return [f for f in files if f.lower().startswith(user_to_check.lower() + '_')]
 
 @app.route('/api/list_workouts_for_tracker', methods=['GET'])
 @login_required
@@ -355,7 +376,6 @@ def complete_workout():
     
     app.logger.info(f"Workout '{tracked_filename}' completed by user {current_user.username}")
     
-    # --- EMAIL LOGIC ---
     athlete_name = tracked_filename.split('_')[0]
     recipient = get_athlete_email(athlete_name)
     if recipient:
