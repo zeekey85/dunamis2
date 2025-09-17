@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dunamis - Tracker</title>
+    <title>Dunamis - Tracker updated</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style> body { font-family: 'Inter', sans-serif; } </style>
@@ -24,17 +24,29 @@
             </div>
         </header>
 
-        <div class="flex flex-col sm:flex-row justify-center items-center gap-4 p-4 bg-white rounded-xl shadow-md border mb-8 flex-wrap">
-             <div id="coach-user-selector-container" class="hidden">
-                <label for="coach-user-selector" class="block text-sm font-medium text-gray-700">Athlete:</label>
+        <div class="flex flex-col sm:flex-row justify-center items-end gap-4 p-4 bg-white rounded-xl shadow-md border mb-8 flex-wrap">
+            
+            <!-- Athlete Selector (for Coach View) -->
+            <div id="athlete-selector-wrapper" class="hidden">
+                <label for="coach-user-selector" class="block text-sm font-medium text-gray-700 text-center sm:text-left">Athlete</label>
                 <select id="coach-user-selector" class="mt-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-auto"></select>
             </div>
-            <select id="plan-selector" class="px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-auto">
-                <option value="">-- Loading Workouts... --</option>
-            </select>
-            <button id="load-plan-button" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto">
-                Load Selected Workout
-            </button>
+
+            <!-- Workout Selector -->
+            <div>
+                <label for="plan-selector" class="block text-sm font-medium text-gray-700 text-center sm:text-left">Workout</label>
+                <select id="plan-selector" class="mt-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-auto">
+                    <option value="">-- Loading... --</option>
+                </select>
+            </div>
+
+            <!-- Load Button -->
+            <div>
+                <button id="load-plan-button" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto">
+                    Load Workout
+                </button>
+            </div>
+
         </div>
         
         <div id="workout-area" class="bg-white p-6 rounded-xl shadow-lg border">
@@ -58,7 +70,7 @@
     
     // --- DOM ELEMENTS ---
     const currentUserDisplay = document.getElementById('current-user-display');
-    const coachUserSelectorContainer = document.getElementById('coach-user-selector-container');
+    const athleteSelectorWrapper = document.getElementById('athlete-selector-wrapper');
     const coachUserSelector = document.getElementById('coach-user-selector');
     const planSelector = document.getElementById('plan-selector');
     const loadPlanButton = document.getElementById('load-plan-button');
@@ -79,6 +91,7 @@
             currentUser = data.username;
             userRole = data.role;
             currentUserDisplay.textContent = `Logged in as: ${currentUser} (${userRole})`;
+
             if (userRole === 'coach') {
                 await setupCoachView();
             } else {
@@ -93,31 +106,36 @@
 
     // --- COACH VIEW ---
     async function setupCoachView() {
-        coachUserSelectorContainer.classList.remove('hidden');
+        // Step 1: Make the athlete selector visible and set a default message for the workout list.
+        athleteSelectorWrapper.classList.remove('hidden');
+        planSelector.innerHTML = '<option value="">-- Select an Athlete First --</option>';
+        
         try {
+            // Step 2: Fetch the list of athletes from the server.
             const response = await fetch(GET_ATHLETES_URL);
             if (!response.ok) throw new Error('Failed to fetch athlete list');
             const data = await response.json();
+            
+            // Step 3: Populate the athlete dropdown if athletes are found.
             if (data.status === 'success' && data.athletes.length > 0) {
                 coachUserSelector.innerHTML = '<option value="">-- Select an Athlete --</option>';
                 data.athletes.forEach(athlete => coachUserSelector.add(new Option(athlete, athlete)));
+                
+                // Step 4: Add an event listener that updates the workout list when an athlete is chosen.
                 coachUserSelector.addEventListener('change', () => {
                     const selectedAthlete = coachUserSelector.value;
                     if (selectedAthlete) {
                         loadWorkoutListFromServer(selectedAthlete);
                     } else {
-                        planSelector.innerHTML = '<option value="">-- Select Athlete First --</option>';
-                        workoutArea.innerHTML = '<p class="text-center text-gray-500 py-12">Select an athlete and workout to begin tracking.</p>';
-                        actionButtons.classList.add('hidden');
+                        planSelector.innerHTML = '<option value="">-- Select an Athlete First --</option>';
                     }
                 });
             } else {
                  coachUserSelector.innerHTML = '<option value="">-- No Athletes Found --</option>';
-                 planSelector.innerHTML = '<option value="">-- No Athletes Found --</option>';
             }
         } catch(e) {
             console.error(e);
-            planSelector.innerHTML = '<option value="">-- Error Loading Athletes --</option>';
+            coachUserSelector.innerHTML = '<option value="">-- Error Loading Athletes --</option>';
         }
     }
 
@@ -230,7 +248,7 @@
             }
             
             if (row.Exercise !== currentExercise) {
-                firstAthleteNote = row['Athlete Notes'] || ''; // Get note for the new exercise
+                firstAthleteNote = row['Athlete Notes'] || '';
                 const historyHtml = await getExerciseHistoryHtml(athleteName, row.Exercise);
                 html += `<div class="mb-4 exercise-block" data-exercise-name="${row.Exercise}">
                             <h3 class="text-xl font-semibold mb-1 border-b pb-2">${row.Exercise}</h3>
@@ -346,8 +364,7 @@
     });
 
     // --- INITIALIZATION CALL ---
-    initializeApp();
+    initializePage();
 </script>
 </body>
 </html>
-
