@@ -8,6 +8,7 @@ from flask_cors import CORS
 import datetime
 import shutil
 import logging
+from logging.handlers import TimedRotatingFileHandler
 from functools import wraps
 import pandas as pd
 import subprocess
@@ -27,6 +28,22 @@ INPROGRESS_DIR = os.path.join(BASE_DIR, 'inprogress_workouts')
 FINISHED_DIR = os.path.join(BASE_DIR, 'finished_workouts')
 API_DIR = os.path.join(BASE_DIR, 'api')
 EMAILS_PATH = os.path.join(API_DIR, 'emails.csv')
+
+# --- LOGGING SETUP ---
+log_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
+log_file = os.path.join(BASE_DIR, 'dunamis_app.log')
+
+# Use TimedRotatingFileHandler to rotate logs daily and keep 7 days of backups
+handler = TimedRotatingFileHandler(log_file, when='midnight', interval=1, backupCount=7)
+handler.setFormatter(log_formatter)
+handler.setLevel(logging.INFO)
+
+# Add the handler to the Flask app's logger
+app.logger.addHandler(handler)
+app.logger.setLevel(logging.INFO)
+
+app.logger.info('Dunamis App starting up...')
+
 
 for directory in [WEB_DIR, PLANNED_DIR, INPROGRESS_DIR, FINISHED_DIR, API_DIR, ASSETS_DIR]:
     os.makedirs(directory, exist_ok=True)
@@ -111,7 +128,6 @@ def get_athlete_email(athlete_name):
 def send_email_notification(recipient_email, subject, body, attachment_path):
     """Sends an email using the command-line mail utility."""
     try:
-        # The command uses mailutils: mail -s "Subject" -A /path/to/file recipient@example.com <<< "Body"
         command = f'echo "{body}" | mail -s "{subject}" -A "{attachment_path}" {recipient_email}'
         subprocess.run(command, shell=True, check=True)
         app.logger.info(f"Successfully sent workout email to {recipient_email}")
@@ -129,8 +145,10 @@ def login():
         if username == 'coach' and password == 'get$trong@dunamis':
             user = User(id=1, username='coach', role='coach')
             login_user(user, remember=True)
+            app.logger.info("Coach user logged in successfully.")
             return redirect(url_for('root'))
         else:
+            app.logger.warning(f"Failed login attempt for username: {username}")
             return 'Invalid credentials. Please try again.', 401
     return render_template('login.html')
 
@@ -297,6 +315,7 @@ def save_plan():
         return jsonify({"status": "error", "message": "Permission denied."}), 403
     with open(os.path.join(PLANNED_DIR, filename), 'w', newline='', encoding='utf-8') as f:
         f.write(data.get('csv_content'))
+    app.logger.info(f"Plan '{filename}' saved for user {current_user.username}")
     return jsonify({"status": "success", "message": f"Plan '{filename}' saved."})
 
 @app.route('/api/save_progress', methods=['POST'])
@@ -308,6 +327,7 @@ def save_progress():
         return jsonify({"status": "error", "message": "Permission denied."}), 403
     with open(os.path.join(INPROGRESS_DIR, filename), 'w', newline='', encoding='utf-8') as f:
         f.write(data.get('csv_content'))
+    app.logger.info(f"Progress saved for workout '{filename}' by user {current_user.username}")
     return jsonify({"status": "success", "message": "Progress saved."})
 
 @app.route('/api/complete_workout', methods=['POST'])
@@ -332,6 +352,8 @@ def complete_workout():
     inprogress_path = os.path.join(INPROGRESS_DIR, tracked_filename)
     if os.path.exists(inprogress_path):
         os.remove(inprogress_path)
+    
+    app.logger.info(f"Workout '{tracked_filename}' completed by user {current_user.username}")
     
     # --- EMAIL LOGIC ---
     athlete_name = tracked_filename.split('_')[0]
@@ -373,6 +395,7 @@ def add_exercise():
         new_df = pd.concat([df, pd.DataFrame([{'Exercise': new_exercise}])], ignore_index=True)
         new_df.sort_values('Exercise', inplace=True)
         new_df.to_csv(exercises_path, index=False)
+        app.logger.info(f"New exercise '{new_exercise}' added by {current_user.username}")
         return jsonify({"status": "success", "message": f"Exercise '{new_exercise}' added."}), 201
     except Exception as e:
         app.logger.error(f"Error adding exercise: {e}")
@@ -415,6 +438,7 @@ def delete_plan():
     file_path = os.path.join(PLANNED_DIR, filename)
     if os.path.exists(file_path):
         os.remove(file_path)
+        app.logger.info(f"Plan '{filename}' deleted by {current_user.username}")
         return jsonify({"status": "success", "message": f"Plan '{filename}' deleted."})
     return jsonify({"status": "error", "message": "Plan not found."}), 404
 
