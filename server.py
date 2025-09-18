@@ -110,7 +110,7 @@ def get_athlete_email(athlete_name):
             reader = csv.reader(infile)
             next(reader, None)
             for row in reader:
-                if row[0].lower() == athlete_name.lower():
+                if row and row[0].lower() == athlete_name.lower():
                     return row[1]
     except FileNotFoundError:
         app.logger.error(f"Email file not found at {EMAILS_PATH}")
@@ -207,18 +207,23 @@ def get_current_user():
 @app.route('/api/get_athletes', methods=['GET'])
 @coach_required
 def get_athletes():
+    """Reads athlete names from the api/emails.csv file."""
+    athletes = []
     try:
-        all_files = os.listdir(PLANNED_DIR) + os.listdir(FINISHED_DIR)
-        athletes = set()
-        for f in all_files:
-            if f.endswith('.csv'):
-                username = f.split('_')[0]
-                if username and username.lower() != 'coach':
-                    athletes.add(username)
-        return jsonify({"status": "success", "athletes": sorted(list(athletes))})
+        with open(EMAILS_PATH, mode='r', newline='') as infile:
+            reader = csv.reader(infile)
+            next(reader)  # Skip the header row
+            for row in reader:
+                if row:  # Ensure the row is not empty
+                    athletes.append(row[0])
+        app.logger.info(f"Loaded {len(athletes)} athletes from emails.csv")
+        return jsonify({"status": "success", "athletes": sorted(list(set(athletes)))})
+    except FileNotFoundError:
+        app.logger.error(f"Could not find emails.csv at {EMAILS_PATH}")
+        return jsonify({"status": "error", "message": "emails.csv file not found."}), 404
     except Exception as e:
-        app.logger.error(f"Could not get athletes: {e}")
-        return jsonify({"status": "error", "message": "Could not retrieve athlete list."}), 500
+        app.logger.error(f"Could not get athletes from email file: {e}")
+        return jsonify({"status": "error", "message": "Could not retrieve athlete list from email file."}), 500
 
 def filter_files_by_user(files, username=None):
     user_to_check = username or current_user.username
