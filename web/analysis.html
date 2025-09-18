@@ -97,7 +97,8 @@
                 if (userRole === 'coach') {
                     await setupCoachView();
                 } else {
-                    statusMessage.textContent = 'Login as a coach to view analysis.';
+                    await loadAnalysisForUser(currentUser);
+                    await populateLogbookSelector(currentUser);
                 }
             } catch(e) {
                 console.error("Initialization failed", e);
@@ -115,7 +116,10 @@
 
                 if (data.status === 'success' && data.athletes.length > 0) {
                     coachUserSelector.innerHTML = '<option value="">-- Select an Athlete --</option>';
-                    data.athletes.forEach(athlete => coachUserSelector.add(new Option(athlete, athlete)));
+                    data.athletes.forEach(athlete => {
+                        // FIX: Use athlete.name for the display text and value
+                        coachUserSelector.add(new Option(athlete.name, athlete.name));
+                    });
 
                     coachUserSelector.addEventListener('change', () => {
                         const selectedAthlete = coachUserSelector.value;
@@ -193,7 +197,6 @@
                 const data = await response.json();
                 if (data.status === 'success' && data.templates.length > 0) {
                     logbookSelector.innerHTML = '<option value="">-- Select a Completed Workout --</option>';
-                    // The server now only sends finished workouts, so no need to filter by type
                     data.templates.forEach(workout => {
                         const name = workout.filename.replace('_tracked.csv', '').replace(/_/g, ' ');
                         logbookSelector.add(new Option(name, `finished:${workout.filename}`));
