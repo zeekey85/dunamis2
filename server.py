@@ -220,6 +220,10 @@ def get_athletes():
         app.logger.error(f"Could not get athletes: {e}")
         return jsonify({"status": "error", "message": "Could not retrieve athlete list."}), 500
 
+def filter_files_by_user(files, username=None):
+    user_to_check = username or current_user.username
+    return [f for f in files if f.lower().startswith(user_to_check.lower() + '_')]
+
 @app.route('/api/list_workouts_for_tracker', methods=['GET'])
 @login_required
 def list_workouts_for_tracker():
@@ -456,6 +460,4 @@ def delete_plan():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-
-
 
