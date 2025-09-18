@@ -207,23 +207,50 @@ def get_current_user():
 @app.route('/api/get_athletes', methods=['GET'])
 @coach_required
 def get_athletes():
-    """Reads athlete names from the api/emails.csv file."""
+    """Reads athlete names and emails from the api/emails.csv file."""
     athletes = []
     try:
+        if not os.path.exists(EMAILS_PATH):
+            with open(EMAILS_PATH, mode='w', newline='') as infile:
+                writer = csv.writer(infile)
+                writer.writerow(['Athlete', 'Email'])
+        
         with open(EMAILS_PATH, mode='r', newline='') as infile:
-            reader = csv.reader(infile)
-            next(reader)  # Skip the header row
+            reader = csv.DictReader(infile)
             for row in reader:
-                if row:  # Ensure the row is not empty
-                    athletes.append(row[0])
+                if row and row.get('Athlete'):
+                    athletes.append({'name': row['Athlete'], 'email': row.get('Email', '')})
         app.logger.info(f"Loaded {len(athletes)} athletes from emails.csv")
-        return jsonify({"status": "success", "athletes": sorted(list(set(athletes)))})
+        athletes.sort(key=lambda x: x['name'].lower())
+        return jsonify({"status": "success", "athletes": athletes})
     except FileNotFoundError:
         app.logger.error(f"Could not find emails.csv at {EMAILS_PATH}")
         return jsonify({"status": "error", "message": "emails.csv file not found."}), 404
     except Exception as e:
         app.logger.error(f"Could not get athletes from email file: {e}")
         return jsonify({"status": "error", "message": "Could not retrieve athlete list from email file."}), 500
+
+@app.route('/api/update_athletes', methods=['POST'])
+@coach_required
+def update_athletes():
+    """Receives a full list of athletes and overwrites the emails.csv file."""
+    updated_athletes_list = request.get_json()
+    if not isinstance(updated_athletes_list, list):
+        return jsonify({"status": "error", "message": "Invalid data format. Expected a list of athletes."}), 400
+
+    try:
+        with open(EMAILS_PATH, mode='w', newline='') as outfile:
+            writer = csv.writer(outfile)
+            writer.writerow(['Athlete', 'Email'])
+            for athlete in updated_athletes_list:
+                if athlete.get('name') and athlete.get('email'):
+                    writer.writerow([athlete.get('name').strip(), athlete.get('email').strip()])
+        
+        app.logger.info("Athlete email list has been updated.")
+        return jsonify({"status": "success", "message": "Athlete list updated successfully."})
+    except Exception as e:
+        app.logger.error(f"Error updating athletes file: {e}")
+        return jsonify({"status": "error", "message": "Failed to update athlete list."}), 500
 
 def filter_files_by_user(files, username=None):
     user_to_check = username or current_user.username
