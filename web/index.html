@@ -188,7 +188,7 @@
                 const data = await response.json();
                 if(data.status === 'success' && data.athletes.length > 0) {
                     coachUserSelector.innerHTML = '<option value="">-- Select an Athlete --</option>';
-                    data.athletes.forEach(athlete => coachUserSelector.add(new Option(athlete, athlete)));
+                    data.athletes.forEach(athlete => coachUserSelector.add(new Option(athlete.name, athlete.name)));
                     coachUserSelector.addEventListener('change', () => {
                         const selectedAthlete = coachUserSelector.value;
                         if (selectedAthlete) {
@@ -396,7 +396,6 @@
         }
         
         async function importPlan() {
-            // This function remains the same as it correctly imports the data structure
             const selected = importSelector.value;
             if (!selected) return showStatus('Please select a template to import.', 'error');
             const [type, filename] = selected.split(':', 2);
@@ -434,27 +433,48 @@
                 const exName = row.Exercise;
                 if (!acc[exName]) {
                     acc[exName] = {
-                        name: exName, sets: 0, 
-                        reps: row['Target Reps'], 
-                        weight: row['Target Weight (lb)'] || row['Target Weight'],
+                        name: exName, sets: 0,
+                        reps: row['Target Reps'],
+                        weights: [],
                         superset: row['Superset Group'] || 'None',
                         notes: row["Coach's Notes"] || row.Notes || ''
                     };
                 }
                 acc[exName].sets++;
+                acc[exName].weights.push(parseFloat(row['Target Weight (lb)']));
                 return acc;
             }, {});
+
             Object.values(exercisesData).forEach(addExerciseToPlanWithData);
         }
 
         function addExerciseToPlanWithData(exData) {
             addExerciseToPlan(exData.name);
             const newExerciseBlock = workoutPlan.lastChild;
+            
+            const allWeightsSame = exData.weights.every(w => w === exData.weights[0]);
+            const isRamp = !allWeightsSame;
+
             newExerciseBlock.querySelector('.sets-input').value = exData.sets;
             newExerciseBlock.querySelector('.reps-input').value = exData.reps;
-            newExerciseBlock.querySelector('.weight-input').value = exData.weight;
             newExerciseBlock.querySelector('.superset-input').value = exData.superset === 'None' ? '' : exData.superset;
             newExerciseBlock.querySelector('.notes-input').value = exData.notes;
+
+            const rampCheckbox = newExerciseBlock.querySelector('.ramp-checkbox');
+            const singleWeightDiv = newExerciseBlock.querySelector('.single-weight-inputs');
+            const rampWeightsDiv = newExerciseBlock.querySelector('.ramp-inputs');
+
+            rampCheckbox.checked = isRamp;
+            if(isRamp) {
+                singleWeightDiv.style.display = 'none';
+                rampWeightsDiv.style.display = 'grid';
+                newExerciseBlock.querySelector('.initial-weight-input').value = exData.weights[0];
+                newExerciseBlock.querySelector('.final-weight-input').value = exData.weights[exData.weights.length - 1];
+            } else {
+                singleWeightDiv.style.display = 'block';
+                rampWeightsDiv.style.display = 'none';
+                newExerciseBlock.querySelector('.weight-input').value = exData.weights[0];
+            }
         }
 
         async function deletePlan(filename) {
